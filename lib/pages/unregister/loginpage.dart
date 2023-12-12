@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:src/pages/unregister/registerpage.dart';
+import 'package:src/pages/unregister/saveaccount.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/widgets/components/emailTextfield.dart';
 import 'package:src/widgets/components/passwordTextfield.dart';
@@ -231,7 +232,13 @@ class _LoginPageState extends State<LoginPage> {
                                 width: 5,
                               ),
                               InkWell(
-                                onTap: () {},
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const SaveAccountPage()));
+                                },
                                 child: const Text(
                                   "Giriş için yardım al.",
                                   style: TextStyle(
