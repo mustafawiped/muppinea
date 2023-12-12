@@ -1,0 +1,47 @@
+name: src
+description: "official muppin project - version early access"
+publish_to: 'none' 
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  firebase_core: ^2.15.1
+  cloud_firestore: ^4.9.1
+  firebase_auth: ^4.15.2
+  google_sign_in: ^6.2.0
+  awesome_dialog: ^3.1.0
+  mailer: ^6.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - assets/images/logo.png
+    - assets/images/default.png
+    - assets/images/chat_bg.jpeg
+
+    - assets/badges/bughunter.png
+    - assets/badges/erkendonemdestekcisi.png
+    - assets/badges/premium.png
+    - assets/badges/admin.png
+
+    - assets/socials/instagram.png
+    - assets/socials/twitter.png
+    - assets/socials/youtube.png
+    - assets/socials/discord.png
+
+    - assets/silinecekler/

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1056855879545",
+    "project_id": "muppinofficial",
+    "storage_bucket": "muppinofficial.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056855879545:android:78d0fbcf21bdd771dc89a8",
+        "android_client_info": {
+          "package_name": "com.mustafagur.src"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWnm6vHyBqdPUZK3Dl76lH6J158A1PnzQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
