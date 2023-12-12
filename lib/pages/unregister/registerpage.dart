@@ -34,6 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   int step = 1;
 
+  // Butona tıklayınca olanlar
   void onLoginButtonClick() {
     if (!buttonEnabled) return;
     setState(() {
@@ -140,7 +141,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 Navigator.pop(context);
               } else {
                 Navigator.pop(context);
-
                 awesomeDialog().show(
                     context,
                     "Hata!",
@@ -249,7 +249,7 @@ class _RegisterPageState extends State<RegisterPage> {
       });
     } else {
       setState(() {
-        if (usernameController.text.isNotEmpty) {
+        if (passwordController.text.isNotEmpty) {
           buttonEnabled = true;
         } else {
           buttonEnabled = false;

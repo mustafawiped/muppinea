@@ -1,5 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:src/pages/unregister/registerpage.dart';
+import 'package:src/services/auth/authservice.dart';
+import 'package:src/widgets/components/emailTextfield.dart';
+import 'package:src/widgets/components/passwordTextfield.dart';
 import 'package:src/widgets/utils/noglowscroll.dart';
 
 class LoginPage extends StatefulWidget {
@@ -10,7 +14,124 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool isPasswordFieldVisible = true;
+  bool buttonEnabled = false;
+  bool buttonLoading = false;
+
+  Future<void> onLoginButtonClick() async {
+    if (buttonEnabled == false || buttonLoading) return;
+    setState(() {
+      buttonLoading = true;
+    });
+    try {
+      String email = emailController.text.trim();
+      print("email: $email");
+      print("psw: ${passwordController.text}");
+      await AuthService.auth.signInWithEmailAndPassword(
+        email: email,
+        password: passwordController.text,
+      );
+
+      print('Giriş başarılı');
+      setState(() {
+        buttonLoading = false;
+      });
+    } catch (e) {
+      if (e is FirebaseAuthException) {
+        print("hata: ${e.code}");
+        if (e.code == 'user-not-found') {
+          emailErrorMessage = "Bu epostaya sahip kullanıcı bulunamadı.";
+          emailErrorState = true;
+        } else if (e.code == 'wrong-password' ||
+            e.code == "invalid-credential") {
+          passwordErrorMessage = "Şifre hatalı!";
+          passwordErrorState = true;
+        } else if (e.code == "too-many-requests") {
+          emailErrorMessage = "Çok fazla denedin. biraz bekleyip tekrar dene.";
+          emailErrorState = true;
+        } else if (e.code == "network-request-failed") {
+          emailErrorMessage = "İnternet bağlantısı yok.";
+          emailErrorState = true;
+        } else {
+          emailErrorMessage = "Geçersiz bir eposta adresi.";
+          emailErrorState = true;
+        }
+        setState(() {
+          buttonLoading = false;
+        });
+      }
+    }
+  }
+
+  // region for Email Input Controls  //
+  TextEditingController emailController = TextEditingController();
+  bool emailErrorState = false;
+  String emailErrorMessage = "";
+
+  String removeConsecutiveUnderscores(String input) {
+    RegExp regex = RegExp(r'_+');
+    return input.replaceAll(regex, '_');
+  }
+
+  void emailErrorCatcher(String text) {
+    List<String> words = text.split(' ');
+    String email = words.where((word) => word.isNotEmpty).join(' ');
+    text = removeConsecutiveUnderscores(email);
+    emailController.text = text.toLowerCase();
+    if (emailController.text == "") {
+      setState(() {
+        buttonEnabled = false;
+        emailErrorState = true;
+        emailErrorMessage = "Eposta boş olamaz.";
+      });
+    } else {
+      setState(() {
+        if (emailController.text.isNotEmpty &&
+            (emailController.text.contains(".com") ||
+                emailController.text.contains(".edu") ||
+                emailController.text.contains(".gov")) &&
+            emailController.text.contains("@") &&
+            passwordController.text.length > 3) {
+          buttonEnabled = true;
+        } else {
+          buttonEnabled = false;
+        }
+        emailErrorState = false;
+      });
+    }
+  }
+  //endregion
+
+  bool passwordErrorState = false;
+  String passwordErrorMessage = "";
+  bool isPasswordFieldVisible = false;
+  TextEditingController passwordController = TextEditingController();
+
+  void passwordErrorCatcher(String text) {
+    List<String> words = text.split(' ');
+    String password = words.where((word) => word.isNotEmpty).join(' ');
+    text = password;
+    if (passwordController.text == "") {
+      setState(() {
+        buttonEnabled = false;
+        passwordErrorState = true;
+        passwordErrorMessage = "Şifre boş olamaz.";
+      });
+    } else {
+      setState(() {
+        if (emailController.text.isNotEmpty &&
+            (emailController.text.contains(".com") ||
+                emailController.text.contains(".edu") ||
+                emailController.text.contains(".gov")) &&
+            emailController.text.contains("@") &&
+            passwordController.text.length > 3) {
+          buttonEnabled = true;
+        } else {
+          buttonEnabled = false;
+        }
+        passwordErrorState = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,90 +159,21 @@ class _LoginPageState extends State<LoginPage> {
                           height: 4,
                         ),
                         const SizedBox(height: 30.0),
-                        Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(20.0)),
-                          ),
-                          child: const TextField(
-                            maxLength: 40,
-                            keyboardType: TextInputType.emailAddress,
-                            autofillHints: [AutofillHints.email],
-                            decoration: InputDecoration(
-                              hintText: 'Eposta',
-                              hintStyle: TextStyle(
-                                  color: Color.fromARGB(255, 123, 123, 123)),
-                              prefixIcon: Icon(
-                                Icons.email,
-                                color: Color.fromARGB(255, 32, 32, 32),
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 10.0,
-                                vertical: 20.0,
-                              ),
-                              counterText: "",
-                            ),
-                          ),
-                        ),
+                        createEmailTextfield(
+                            controller: emailController,
+                            hintText: "Eposta..",
+                            changed: emailErrorCatcher,
+                            errorState: emailErrorState,
+                            errorText: emailErrorMessage),
                         const SizedBox(height: 10.0),
-                        SizedBox(
-                          width: double.infinity,
-                          child: TextField(
-                            decoration: InputDecoration(
-                                filled: true,
-                                fillColor: isPasswordFieldVisible
-                                    ? Colors.white
-                                    : const Color.fromARGB(255, 255, 255, 255),
-                                hintText: 'Şifre',
-                                hintStyle: const TextStyle(
-                                    color: Color.fromARGB(255, 123, 123, 123)),
-                                prefixIcon: const Icon(
-                                  Icons.lock,
-                                  color: Color.fromARGB(255, 32, 32, 32),
-                                ),
-                                suffixIcon: GestureDetector(
-                                  onTap: () {},
-                                  child: Icon(
-                                    isPasswordFieldVisible
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color:
-                                        const Color.fromARGB(255, 32, 32, 32),
-                                  ),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20.0),
-                                  borderSide: const BorderSide(
-                                      color: Color.fromARGB(255, 64, 64, 64)),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20.0),
-                                  borderSide: const BorderSide(
-                                      color: Color.fromARGB(255, 64, 64, 64)),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20.0),
-                                  borderSide: const BorderSide(
-                                      color: Color.fromARGB(255, 64, 64, 64)),
-                                ),
-                                errorBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Color.fromARGB(255, 64, 64, 64)),
-                                  borderRadius: BorderRadius.circular(20.0),
-                                ),
-                                focusedErrorBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Color.fromARGB(255, 64, 64, 64)),
-                                  borderRadius: BorderRadius.circular(20.0),
-                                ),
-                                errorText:
-                                    null // isErrorState ? isErrorText : null,
-                                ),
-                            obscureText: !isPasswordFieldVisible,
-                          ),
-                        ),
+                        createPasswordTextField(
+                            controller: passwordController,
+                            hintText: "Şifre..",
+                            changed: passwordErrorCatcher,
+                            errorState: passwordErrorState,
+                            errorText: passwordErrorMessage,
+                            visibility: passwordObs(),
+                            obscureState: isPasswordFieldVisible),
                         const SizedBox(
                           height: 20,
                         ),
@@ -132,15 +184,16 @@ class _LoginPageState extends State<LoginPage> {
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
-                                backgroundColor:
-                                    const Color.fromARGB(154, 73, 47, 85),
+                                backgroundColor: buttonEnabled
+                                    ? Colors.purple
+                                    : const Color.fromARGB(154, 73, 47, 85),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10.0),
                                 ),
                               ),
                               onPressed:
-                                  () {}, //isLoading ? null : transactions,
-                              child: /* isLoading
+                                  buttonLoading ? null : onLoginButtonClick,
+                              child: buttonLoading
                                   ? const SizedBox(
                                       width: 24,
                                       height: 24,
@@ -151,8 +204,13 @@ class _LoginPageState extends State<LoginPage> {
                                             Color.fromARGB(255, 159, 159, 159)),
                                       ),
                                     )
-                                  :*/
-                                  const Text("Giriş Yap"),
+                                  : Text(
+                                      "Giriş Yap",
+                                      style: TextStyle(
+                                          color: buttonEnabled
+                                              ? Colors.white
+                                              : Colors.grey),
+                                    ),
                             ),
                           ),
                         ),
@@ -254,6 +312,20 @@ class _LoginPageState extends State<LoginPage> {
             )
           ],
         ),
+      ),
+    );
+  }
+
+  GestureDetector passwordObs() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          isPasswordFieldVisible = !isPasswordFieldVisible;
+        });
+      },
+      child: Icon(
+        isPasswordFieldVisible ? Icons.visibility : Icons.visibility_off,
+        color: const Color.fromARGB(255, 32, 32, 32),
       ),
     );
   }
