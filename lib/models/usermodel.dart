@@ -1,4 +1,4 @@
-// ignore: file_names
+// ignore: file_names, camel_case_types
 class userData {
   late String id;
   late String username;
@@ -13,21 +13,24 @@ class userData {
   late String pronouns;
   late bool security;
   late bool isOnline;
+  late bool isTyping;
 
-  userData(
-      {required this.about,
-      required this.createdAt,
-      required this.email,
-      required this.id,
-      required this.image,
-      required this.isOnline,
-      required this.lastActive,
-      required this.username,
-      required this.badges,
-      required this.pronouns,
-      required this.security,
-      required this.socials,
-      required this.pushToken});
+  userData({
+    required this.about,
+    required this.createdAt,
+    required this.email,
+    required this.id,
+    required this.image,
+    required this.isOnline,
+    required this.lastActive,
+    required this.username,
+    required this.badges,
+    required this.pronouns,
+    required this.security,
+    required this.socials,
+    required this.isTyping,
+    required this.pushToken,
+  });
 
   Map<String, dynamic> toMap() {
     return {
@@ -43,7 +46,8 @@ class userData {
       "socials": socials,
       "pronouns": pronouns,
       "security": security,
-      "isOnline": isOnline
+      "isOnline": isOnline,
+      "isTyping": isTyping
     };
   }
 
@@ -61,5 +65,6 @@ class userData {
     pronouns = json["pronouns"] ?? "";
     security = json["security"] ?? false;
     isOnline = json["isOnline"] ?? false;
+    isTyping = json["isTyping"] ?? false;
   }
 }

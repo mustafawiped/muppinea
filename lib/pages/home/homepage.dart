@@ -1,5 +1,15 @@
+// ignore_for_file: non_constant_identifier_names
+
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:src/dialogs/awesome.dart';
+import 'package:src/models/usermodel.dart';
+import 'package:src/services/apis/users.dart';
 import 'package:src/services/auth/authservice.dart';
+import 'package:src/widgets/components/boxs/chatbox.dart';
+import 'package:src/widgets/components/boxs/statusbox.dart';
+import 'package:src/widgets/components/useravatar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,6 +22,39 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _globalKey = GlobalKey();
 
   int TabState = 1;
+
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    AuthService.getSelfInfo().then((value) {
+      if (value) {
+        setState(() {
+          loading = false;
+        });
+      }
+    });
+
+    SystemChannels.lifecycle.setMessageHandler((message) {
+      if (AuthService.auth.currentUser != null) {
+        if (message == "AppLifecycleState.resumed") {
+          APIs.updateActiveStatus(true, false);
+        }
+        if (message == "AppLifecycleState.paused") {
+          APIs.updateActiveStatus(false, false);
+        }
+        if (message == "AppLifecycleState.inactive") {
+          APIs.updateActiveStatus(false, false);
+        }
+        if (message == "AppLifecycleState.hidden") {
+          APIs.updateActiveStatus(false, false);
+        }
+      }
+
+      return Future.value(message);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,12 +139,18 @@ class _HomePageState extends State<HomePage> {
                       ),
                       TextButton(
                           onPressed: () {
-                            setState(() {
-                              TabState = 3;
-                            });
+                            awesomeDialog().show(
+                                context,
+                                "Burası yapım aşamasında!",
+                                "Muppin Erken Erişim'de olduğu için bu özellik henüz aktif değildir.",
+                                "",
+                                "Tamam",
+                                DialogType.info,
+                                null,
+                                () {});
                           },
                           child: Text(
-                            "Market",
+                            "Sunucular",
                             style: TextStyle(
                               color: TabState == 3 ? Colors.white : Colors.grey,
                               fontSize: 22,
@@ -140,7 +189,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            "Hikayeler",
+                            "Çevrimiçi Arkadaşlar",
                             style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700),
@@ -156,27 +205,19 @@ class _HomePageState extends State<HomePage> {
                       ),
                       SizedBox(
                         height: 90,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: const [
-                            createUserStatus(
-                                filename: "img1.jpg", name: "Hikayen"),
-                            createUserStatus(
-                                filename: "img2.jpg", name: "mustafawiped"),
-                            createUserStatus(
-                                filename: "img3.jpg", name: "Salih"),
-                            createUserStatus(
-                                filename: "img4.jpg", name: "Ersin"),
-                            createUserStatus(
-                                filename: "img5.jpg", name: "Ahmet"),
-                            createUserStatus(
-                                filename: "img6.jpg", name: "Mustafa"),
-                            createUserStatus(
-                                filename: "img7.jpg", name: "Burak"),
-                            createUserStatus(
-                                filename: "img8.jpg", name: "Saliha"),
-                          ],
-                        ),
+                        child: loading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                color: Colors.white,
+                              ))
+                            : ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  createUserStatus(
+                                      filename: AuthService.me.image,
+                                      name: AuthService.me.username),
+                                ],
+                              ),
                       )
                     ],
                   ),
@@ -193,61 +234,45 @@ class _HomePageState extends State<HomePage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   decoration: const BoxDecoration(
-                    color: Color(0xFFEFFFFC),
+                    color: Color.fromARGB(255, 255, 255, 255),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40),
                     ),
                   ),
-                  child: ListView(
-                    padding: const EdgeInsets.only(top: 5, left: 25, right: 25),
-                    children: [
-                      createChatMsg(
-                        profilePicture: "img1.jpg",
-                        username: "mustafawiped",
-                        lastMsg: "Hey orada mısın?",
-                        notification: 3,
-                        time: "9:35 PM",
-                        onClick: () {},
-                      ),
-                      const SizedBox(
-                        height: 5,
-                      ),
-                      createChatMsg(
-                        profilePicture: "img3.jpg",
-                        username: "katarinabluu",
-                        lastMsg: "Senden hoşlanıyorum sanırım..",
-                        notification: 2,
-                        time: "1:40 PM",
-                        onClick: () {},
-                      ),
-                      const SizedBox(
-                        height: 5,
-                      ),
-                      createChatMsg(
-                        profilePicture: "img2.jpg",
-                        username: "thv",
-                        lastMsg: "anlaştık.",
-                        notification: 0,
-                        time: "8:54 PM",
-                        onClick: () {},
-                      ),
-                      const SizedBox(
-                        height: 5,
-                      ),
-                      createChatMsg(
-                        profilePicture: "img4.jpg",
-                        username: "jungkook",
-                        lastMsg: "standing next to youu!",
-                        notification: 0,
-                        time: "8:54 PM",
-                        onClick: () {},
-                      ),
-                      const SizedBox(
-                        height: 5,
-                      ),
-                    ],
-                  ),
+                  child: loading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                          color: Colors.purple,
+                        ))
+                      : StreamBuilder(
+                          stream: APIs.getAllUsers(),
+                          builder: (context, snapshot) {
+                            switch (snapshot.connectionState) {
+                              case ConnectionState.waiting:
+                              case ConnectionState.none:
+                                return const Center(
+                                    child: CircularProgressIndicator());
+
+                              case ConnectionState.active:
+                              case ConnectionState.done:
+                                final data = snapshot.data?.docs;
+                                List list = data
+                                        ?.map((e) => userData.fromMap(e.data()))
+                                        .toList() ??
+                                    [];
+
+                                return ListView.builder(
+                                    padding: const EdgeInsets.only(
+                                        top: 3, left: 5, right: 5),
+                                    itemCount: list.length,
+                                    itemBuilder: (context, index) {
+                                      return createChatMsg(
+                                        userDt: list[index],
+                                      );
+                                    });
+                            }
+                          }),
                 ),
               ),
 
@@ -256,15 +281,6 @@ class _HomePageState extends State<HomePage> {
               const Center(
                 child: Text(
                   "Keşfet",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-
-            //      ** TAB STATE 3 **         //
-            if (TabState == 3)
-              const Center(
-                child: Text(
-                  "Market",
                   style: TextStyle(color: Colors.white),
                 ),
               ),
@@ -292,145 +308,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ignore: camel_case_types, Sohbet mesajlarını oluşturma
-class createChatMsg extends StatelessWidget {
-  final String profilePicture;
-  final String username;
-  final String lastMsg;
-  final String time;
-  final int notification;
-  final Function() onClick;
-
-  const createChatMsg({
-    super.key,
-    required this.profilePicture,
-    required this.username,
-    required this.lastMsg,
-    required this.time,
-    required this.notification,
-    required this.onClick,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onClick,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              UserAvatar(filename: profilePicture),
-              const SizedBox(
-                width: 5,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    username,
-                    style: const TextStyle(
-                        color: Colors.black54, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    lastMsg,
-                    style: const TextStyle(
-                      color: Colors.black,
-                    ),
-                  )
-                ],
-              )
-            ],
-          ),
-          Column(
-            children: [
-              Text(
-                time,
-                style: const TextStyle(
-                  fontSize: 10,
-                ),
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              if (notification != 0)
-                CircleAvatar(
-                  radius: 7,
-                  backgroundColor: Colors.purple,
-                  child: Text(
-                    notification.toString(),
-                    style: const TextStyle(fontSize: 10, color: Colors.white),
-                  ),
-                )
-            ],
-          )
-        ],
-      ),
-    );
-  }
-}
-
-// ignore: camel_case_types, Hikaye oluşturma
-class createUserStatus extends StatelessWidget {
-  final String filename;
-  final String name;
-  const createUserStatus({
-    super.key,
-    required this.filename,
-    required this.name,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 20),
-      child: SizedBox(
-        width: 60,
-        height: 60,
-        child: Column(
-          children: [
-            UserAvatar(filename: filename),
-            const SizedBox(
-              height: 5,
-            ),
-            Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Kullanıcı avatarı oluşturma
-class UserAvatar extends StatelessWidget {
-  final String filename;
-  const UserAvatar({
-    super.key,
-    required this.filename,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: 29,
-      backgroundColor: Colors.white24,
-      child: CircleAvatar(
-        radius: 26,
-        backgroundImage: Image.asset("assets/silinecekler/$filename").image,
-      ),
-    );
-  }
-}
-
-// ignore: camel_case_types, drawer oluşturma sınıfı
 class createDrawer extends StatelessWidget {
   const createDrawer({super.key});
 
@@ -447,14 +324,14 @@ class createDrawer extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Color.fromARGB(255, 32, 32, 32),
         ),
-        child: const Padding(
-          padding: EdgeInsets.fromLTRB(20, 50, 20, 20),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 children: [
-                  Row(
+                  const Row(
                     children: [
                       Icon(
                         Icons.arrow_back_ios,
@@ -470,61 +347,61 @@ class createDrawer extends StatelessWidget {
                       )
                     ],
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 30,
                   ),
                   Row(
                     children: [
-                      UserAvatar(filename: "img1.jpg"),
-                      SizedBox(
+                      UserAvatar(filename: AuthService.me.image),
+                      const SizedBox(
                         width: 12,
                       ),
                       Text(
-                        "mustafawiped",
-                        style: TextStyle(color: Colors.white),
+                        AuthService.me.username,
+                        style: const TextStyle(color: Colors.white),
                       )
                     ],
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 30,
                   ),
-                  createDrawerItem(
+                  const createDrawerItem(
                     headerText: "Profil",
                     icon: Icons.person,
                     color: Colors.white,
                   ),
-                  createDrawerItem(
+                  const createDrawerItem(
                     headerText: "Bildirim Ayarları",
                     icon: Icons.notification_add,
                     color: Colors.white,
                   ),
-                  createDrawerItem(
+                  const createDrawerItem(
                     headerText: "Veri Depolama",
                     icon: Icons.storage,
                     color: Colors.white,
                   ),
-                  createDrawerItem(
+                  const createDrawerItem(
                     headerText: "Sohbet Ayarı",
                     icon: Icons.storage,
                     color: Colors.white,
                   ),
-                  createDrawerItem(
+                  const createDrawerItem(
                     headerText: "Genel Ayarlar",
                     icon: Icons.settings,
                     color: Colors.white,
                   ),
-                  createDrawerItem(
+                  const createDrawerItem(
                     headerText: "Yardım",
                     icon: Icons.help,
                     color: Colors.white,
                   ),
-                  Divider(
+                  const Divider(
                     color: Color.fromARGB(255, 73, 47, 85),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
-                  createDrawerItem(
+                  const createDrawerItem(
                     headerText: "Çıkış Yap",
                     icon: Icons.logout,
                     color: Colors.white,

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:src/models/usermodel.dart';
 import 'package:src/services/apis/users.dart';
 
 class AuthService extends ChangeNotifier {
@@ -8,9 +10,43 @@ class AuthService extends ChangeNotifier {
   static FirebaseAuth auth = FirebaseAuth.instance;
 
   // firestore u yetkilendir
-  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
+  static final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
+
+  static FirebaseMessaging fMessaging = FirebaseMessaging.instance;
 
   static User get user => auth.currentUser!;
+
+  static late userData me;
+
+  static Future<bool> getSelfInfo() async {
+    return await _fireStore
+        .collection('Users')
+        .doc(user.uid)
+        .get()
+        .then((user) async {
+      if (user.exists) {
+        me = userData.fromMap(user.data()!);
+        await getFirebaseMessagingToken();
+
+        //for setting user status to active
+        APIs.updateActiveStatus(true, false);
+        print('My Data: ${user.data()}');
+        return true;
+      } else {
+        return false;
+      }
+    });
+  }
+
+  static Future<void> getFirebaseMessagingToken() async {
+    await fMessaging.requestPermission();
+
+    await fMessaging.getToken().then((t) {
+      if (t != null) {
+        me.pushToken = t;
+      }
+    });
+  }
 
   // kullanıcı girişi yap
   Future<UserCredential> signInWithEmailanPassword(

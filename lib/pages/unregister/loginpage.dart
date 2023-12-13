@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:src/pages/unregister/registerpage.dart';
 import 'package:src/pages/unregister/saveaccount.dart';
 import 'package:src/services/auth/authservice.dart';
-import 'package:src/widgets/components/emailTextfield.dart';
-import 'package:src/widgets/components/passwordTextfield.dart';
+import 'package:src/widgets/components/inputs/emailTextfield.dart';
+import 'package:src/widgets/components/inputs/passwordTextfield.dart';
 import 'package:src/widgets/utils/noglowscroll.dart';
 
 class LoginPage extends StatefulWidget {

@@ -4,7 +4,7 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:src/dialogs/awesome.dart';
 import 'package:src/services/auth/authservice.dart';
-import 'package:src/widgets/components/emailTextfield.dart';
+import 'package:src/widgets/components/inputs/emailTextfield.dart';
 import 'package:src/widgets/utils/noglowscroll.dart';
 
 class SaveAccountPage extends StatefulWidget {

@@ -8,10 +8,10 @@ import 'package:src/dialogs/loading.dart';
 import 'package:src/services/apis/users.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/services/shippers/emails.dart';
-import 'package:src/widgets/components/emailTextfield.dart';
-import 'package:src/widgets/components/passwordTextfield.dart';
-import 'package:src/widgets/components/usernameTextfield.dart';
-import 'package:src/widgets/components/verifycodeTextfield.dart';
+import 'package:src/widgets/components/inputs/emailTextfield.dart';
+import 'package:src/widgets/components/inputs/passwordTextfield.dart';
+import 'package:src/widgets/components/inputs/usernameTextfield.dart';
+import 'package:src/widgets/components/inputs/verifycodeTextfield.dart';
 import 'package:src/widgets/utils/noglowscroll.dart';
 
 class RegisterPage extends StatefulWidget {
