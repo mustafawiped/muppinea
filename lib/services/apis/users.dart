@@ -77,7 +77,7 @@ class APIs {
   }
 
   static Future<void> sendMessage(
-      userData otherUser, String msg, Type type) async {
+      userData otherUser, String msg, Type type, List replyState) async {
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
     final Message newMessage = Message(
@@ -88,7 +88,7 @@ class APIs {
       fromId: AuthService.user.uid,
       sent: time,
       edited: "",
-      reply: "",
+      reply: replyState,
     );
 
     final ref =
@@ -105,7 +105,7 @@ class APIs {
 
   static Future<void> updateActiveStatus(bool isOnline, bool state) async {
     fstore.collection('Users').doc(AuthService.user.uid).update({
-      "isOnline": isOnline,
+      "isOnline": isOnline ? true : false,
       "lastActive": DateTime.now().millisecondsSinceEpoch.toString(),
       "pushToken": state ? "" : AuthService.me.pushToken,
     });
@@ -115,13 +115,38 @@ class APIs {
     final ext = file.path.split(".").last;
     final ref = storage.ref().child(
         "images/${getConversationID(chatUser.id)}/${DateTime.now().millisecondsSinceEpoch}.$ext");
-    await ref
-        .putFile(file, SettableMetadata(contentType: 'image/$ext'))
-        .then((p0) async {
-      print("Data Transferred: ${p0.bytesTransferred / 1000} kb");
-    });
+    await ref.putFile(file, SettableMetadata(contentType: 'image/$ext'));
 
     final imageUrl = await ref.getDownloadURL();
-    await sendMessage(chatUser, imageUrl, Type.image);
+    await sendMessage(chatUser, imageUrl, Type.image, []);
+  }
+
+  static Stream<QuerySnapshot> getLastMessage(userData user) {
+    return fstore
+        .collection('chats/${getConversationID(user.id)}/messages')
+        .orderBy('sent', descending: true)
+        .limit(1)
+        .snapshots();
+  }
+
+  static Future<void> updateMessage(Message message, String newMessage) async {
+    await fstore
+        .collection('chats/${getConversationID(message.told)}/messages')
+        .doc(message.sent)
+        .update({
+      'msg': newMessage,
+      'read': "",
+      'edited': DateTime.now().millisecondsSinceEpoch.toString(),
+    });
+  }
+
+  static Future<void> deleteMessage(Message message) async {
+    await fstore
+        .collection('chats/${getConversationID(message.told)}/messages')
+        .doc(message.sent)
+        .delete();
+    if (message.type == Type.image) {
+      await storage.refFromURL(message.msg).delete();
+    }
   }
 }

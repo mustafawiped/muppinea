@@ -1,6 +1,9 @@
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+// ignore: camel_case_types
 class createEmailTextfield extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;

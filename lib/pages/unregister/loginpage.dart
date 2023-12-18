@@ -25,20 +25,16 @@ class _LoginPageState extends State<LoginPage> {
     });
     try {
       String email = emailController.text.trim();
-      print("email: $email");
-      print("psw: ${passwordController.text}");
       await AuthService.auth.signInWithEmailAndPassword(
         email: email,
         password: passwordController.text,
       );
 
-      print('Giriş başarılı');
       setState(() {
         buttonLoading = false;
       });
     } catch (e) {
       if (e is FirebaseAuthException) {
-        print("hata: ${e.code}");
         if (e.code == 'user-not-found') {
           emailErrorMessage = "Bu epostaya sahip kullanıcı bulunamadı.";
           emailErrorState = true;

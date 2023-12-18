@@ -30,7 +30,6 @@ class AuthService extends ChangeNotifier {
 
         //for setting user status to active
         APIs.updateActiveStatus(true, false);
-        print('My Data: ${user.data()}');
         return true;
       } else {
         return false;
@@ -78,8 +77,7 @@ class AuthService extends ChangeNotifier {
       APIs.createUser(email, username, password, pp);
 
       return true;
-    } on FirebaseAuthException catch (e) {
-      print("Error: $e");
+    } catch (e) {
       return false;
     }
   }

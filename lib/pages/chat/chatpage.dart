@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, sort_child_properties_last
 
 import 'dart:io';
 
@@ -13,8 +13,10 @@ import 'package:src/models/messagemodel.dart';
 import 'package:src/models/usermodel.dart';
 import 'package:src/pages/home/profilepage.dart';
 import 'package:src/services/apis/users.dart';
+import 'package:src/services/auth/authservice.dart';
 import 'package:src/widgets/components/boxs/messagebox.dart';
 import 'package:src/widgets/utils/times.dart';
+import 'package:swipe_to/swipe_to.dart';
 
 class ChatPage extends StatefulWidget {
   final userData otherUser;
@@ -26,11 +28,18 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  static final FocusNode focusNode = FocusNode();
   List<Message> _list = [];
 
   final _textController = TextEditingController();
 
-  bool _showEmoji = false, _isUpLoading = false, appLifeStyle = true;
+  bool _showEmoji = false,
+      _isUpLoading = false,
+      appLifeStyle = true,
+      _isReplyState = false;
+
+  String replyString = "";
+  bool replyUser = false;
 
   late Size mq;
 
@@ -76,7 +85,7 @@ class _ChatPageState extends State<ChatPage> {
         child: Scaffold(
             backgroundColor: const Color.fromARGB(255, 32, 32, 32),
             appBar: AppBar(
-              backgroundColor: Colors.transparent,
+              backgroundColor: const Color.fromARGB(255, 32, 32, 32),
               automaticallyImplyLeading: false,
               flexibleSpace: createAppBar(),
             ),
@@ -242,117 +251,226 @@ class _ChatPageState extends State<ChatPage> {
               color: const Color.fromARGB(255, 73, 47, 85),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15)),
-              child: Row(
+              child: Column(
                 children: [
-                  // emoji button
-                  IconButton(
-                    onPressed: () {
-                      FocusScope.of(context).unfocus();
-                      setState(() => _showEmoji = !_showEmoji);
-                    },
-                    icon: const Icon(
-                      Icons.emoji_emotions,
-                      color: Colors.white,
-                      size: 25,
+                  if (_isReplyState)
+                    Container(
+                      width: double.infinity,
+                      padding:
+                          const EdgeInsets.only(left: 10, top: 5, bottom: 5),
+                      margin: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color.fromARGB(255, 192, 120, 205),
+                            Color.fromARGB(255, 54, 0, 80),
+                            Color.fromARGB(255, 54, 0, 80),
+                            Color.fromARGB(255, 54, 0, 80),
+                          ],
+                          stops: [0.0, 0.05, 0.2, 1.0],
+                        ),
+                      ),
+                      child: Stack(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: Text(
+                                  replyUser
+                                      ? AuthService.me.username
+                                      : widget.otherUser.username,
+                                  style: const TextStyle(
+                                    color: Color.fromARGB(255, 192, 120, 205),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight
+                                        .bold, // Color.fromARGB(255, 54, 0, 80),
+                                  ),
+                                ),
+                              ),
+                              replyString.contains("MuppinImgMsg:Id=")
+                                  ? const Padding(
+                                      padding: EdgeInsets.only(left: 8.0),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.photo,
+                                            size: 12,
+                                            color: Colors.grey,
+                                          ),
+                                          SizedBox(
+                                            width: 2,
+                                          ),
+                                          Text(
+                                            "Fotoğraf",
+                                            style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: Text(
+                                        replyString,
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                        maxLines: 3,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                            ],
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 3,
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.transparent,
+                              ),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isReplyState = !_isReplyState;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  Row(
+                    children: [
+                      // emoji button
+                      IconButton(
+                        onPressed: () {
+                          FocusScope.of(context).unfocus();
+                          setState(() => _showEmoji = !_showEmoji);
+                        },
+                        icon: const Icon(
+                          Icons.emoji_emotions,
+                          color: Colors.white,
+                          size: 25,
+                        ),
+                      ),
 
-                  Expanded(
-                      child: TextField(
-                    controller: _textController,
-                    keyboardType: TextInputType.multiline,
-                    textCapitalization: TextCapitalization.sentences,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: "Mesaj..",
-                      hintStyle: TextStyle(color: Colors.grey),
-                      border: InputBorder.none,
-                    ),
-                    maxLines: 4,
-                    minLines: 1,
-                    onTap: () {
-                      setState(() {
-                        if (_showEmoji) {
+                      Expanded(
+                          child: TextField(
+                        controller: _textController,
+                        keyboardType: TextInputType.multiline,
+                        focusNode: focusNode,
+                        textCapitalization: TextCapitalization.sentences,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintText: "Mesaj..",
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
+                        ),
+                        maxLines: 4,
+                        minLines: 1,
+                        onTap: () {
                           setState(() {
-                            _showEmoji = !_showEmoji;
+                            if (_showEmoji) {
+                              setState(() {
+                                _showEmoji = !_showEmoji;
+                              });
+                            }
                           });
-                        }
-                      });
-                    },
-                  )),
+                        },
+                      )),
 
-                  // image button
-                  IconButton(
-                    onPressed: () async {
-                      if (_isUpLoading) {
-                        awesomeDialog().show(
-                            context,
-                            "Hata!",
-                            "Şuanki yükleme bittiğinde yeni fotoğraf/fotoğraflar ekleyebilirsin",
-                            "Tamam",
-                            "",
-                            DialogType.error,
-                            () {},
-                            null);
-                        return;
-                      }
+                      if (!_isReplyState)
+                        // image button
+                        IconButton(
+                          onPressed: () async {
+                            if (_isUpLoading) {
+                              awesomeDialog().show(
+                                  context,
+                                  "Hata!",
+                                  "Şuanki yükleme bittiğinde yeni fotoğraf/fotoğraflar ekleyebilirsin",
+                                  "Tamam",
+                                  "",
+                                  DialogType.error,
+                                  () {},
+                                  null);
+                              return;
+                            }
 
-                      final picker = ImagePicker();
-                      final List<XFile> images =
-                          await picker.pickMultiImage(imageQuality: 70);
-                      setState(() {
-                        _isUpLoading = true;
-                      });
-                      for (XFile i in images) {
-                        await APIs.sendChatImage(
-                            widget.otherUser, File(i.path));
-                      }
-                      setState(() {
-                        _isUpLoading = false;
-                      });
-                    },
-                    icon: const Icon(
-                      Icons.image,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
+                            final picker = ImagePicker();
+                            final List<XFile> images =
+                                await picker.pickMultiImage(imageQuality: 70);
+                            setState(() {
+                              _isUpLoading = true;
+                            });
+                            for (XFile i in images) {
+                              await APIs.sendChatImage(
+                                  widget.otherUser, File(i.path));
+                            }
+                            setState(() {
+                              _isUpLoading = false;
+                            });
+                          },
+                          icon: const Icon(
+                            Icons.image,
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                        ),
 
-                  // camera button
-                  IconButton(
-                    onPressed: () async {
-                      if (_isUpLoading) {
-                        awesomeDialog().show(
-                            context,
-                            "Hata!",
-                            "Şuanki yükleme bittiğinde yeni fotoğraf/fotoğraflar ekleyebilirsin",
-                            "Tamam",
-                            "",
-                            DialogType.error,
-                            () {},
-                            null);
-                        return;
-                      }
+                      if (!_isReplyState)
+                        // camera button
+                        IconButton(
+                          onPressed: () async {
+                            if (_isUpLoading) {
+                              awesomeDialog().show(
+                                  context,
+                                  "Hata!",
+                                  "Şuanki yükleme bittiğinde yeni fotoğraf/fotoğraflar ekleyebilirsin",
+                                  "Tamam",
+                                  "",
+                                  DialogType.error,
+                                  () {},
+                                  null);
+                              return;
+                            }
 
-                      final picker = ImagePicker();
-                      var pickedFile = await picker.pickImage(
-                          source: ImageSource.camera, imageQuality: 70);
-                      if (pickedFile != null) {
-                        setState(() {
-                          _isUpLoading = true;
-                        });
-                        await APIs.sendChatImage(
-                            widget.otherUser, File(pickedFile.path));
-                        setState(() {
-                          _isUpLoading = false;
-                        });
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.camera_alt_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    ),
+                            final picker = ImagePicker();
+                            var pickedFile = await picker.pickImage(
+                                source: ImageSource.camera, imageQuality: 70);
+                            if (pickedFile != null) {
+                              setState(() {
+                                _isUpLoading = true;
+                              });
+                              await APIs.sendChatImage(
+                                  widget.otherUser, File(pickedFile.path));
+                              setState(() {
+                                _isUpLoading = false;
+                              });
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.camera_alt_rounded,
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -361,9 +479,13 @@ class _ChatPageState extends State<ChatPage> {
           MaterialButton(
             onPressed: () {
               String text = _textController.text;
-              if (text.isNotEmpty) {
-                APIs.sendMessage(widget.otherUser, text, Type.text);
+              if (text.trim().isNotEmpty) {
+                List replyList = _isReplyState ? [replyUser, replyString] : [];
+                APIs.sendMessage(widget.otherUser, text, Type.text, replyList);
                 _textController.clear();
+                setState(() {
+                  _isReplyState = false;
+                });
               }
             },
             minWidth: 0,
@@ -409,9 +531,23 @@ class _ChatPageState extends State<ChatPage> {
                   reverse: true,
                   padding: EdgeInsets.only(top: mq.height * .01),
                   itemBuilder: (context, index) {
-                    return MessageBox(
-                      message: _list[index],
-                      seenState: appLifeStyle,
+                    return SwipeTo(
+                      child: MessageBox(
+                        message: _list[index],
+                        seenState: appLifeStyle,
+                        otherUsername: widget.otherUser.username,
+                      ),
+                      onRightSwipe: (details) {
+                        replyUser = AuthService.me.id == _list[index].fromId;
+                        replyString = _list[index].type == Type.text
+                            ? _list[index].msg
+                            : "MuppinImgMsg:Id=${_list[index].sent}";
+                        focusNode.requestFocus();
+                        setState(() {
+                          _isReplyState = true;
+                        });
+                      },
+                      iconColor: Colors.white,
                     );
                   },
                 );
@@ -420,7 +556,7 @@ class _ChatPageState extends State<ChatPage> {
                   child: InkWell(
                     onTap: () {
                       APIs.sendMessage(
-                          widget.otherUser, "Merhaba 👋", Type.text);
+                          widget.otherUser, "Merhaba 👋", Type.text, []);
                     },
                     child: const Text(
                       '"Merhaba 👋"\ndemek ister misin?',

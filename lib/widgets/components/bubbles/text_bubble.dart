@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// ignore: constant_identifier_names
 const double BUBBLE_RADIUS = 16;
 
 ///basic chat bubble type
@@ -27,7 +28,7 @@ class BubbleNormal extends StatelessWidget {
   final String edited;
   final BoxConstraints? constraints;
 
-  BubbleNormal({
+  const BubbleNormal({
     Key? key,
     required this.text,
     this.constraints,
@@ -124,23 +125,34 @@ class BubbleNormal extends StatelessWidget {
                           style: textStyle,
                           textAlign: TextAlign.left,
                         ),
-                        Text(
-                          time,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 10,
-                          ),
-                          textAlign: TextAlign.left,
-                        ),
-                        if (edited.isNotEmpty)
-                          const Text(
-                            "(düzenlendi)",
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 7,
+                        Wrap(
+                          children: [
+                            Text(
+                              time,
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.left,
                             ),
-                            textAlign: TextAlign.left,
-                          ),
+                            if (edited.isNotEmpty)
+                              const SizedBox(
+                                width: 5,
+                              ),
+                            if (edited.isNotEmpty)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 4),
+                                child: Text(
+                                  "(düzenlendi)",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 7,
+                                  ),
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                          ],
+                        ),
                       ],
                     ),
                   ),

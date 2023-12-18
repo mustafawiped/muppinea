@@ -260,13 +260,6 @@ class _RegisterPageState extends State<RegisterPage> {
   }
   //endregion
 
-  Future<void> _handleSignIn() async {
-    try {} catch (error) {
-      print('Error during Google Sign In: $error');
-      // Handle error
-    }
-  }
-
   Future<void> getGoogleUserInfo() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();

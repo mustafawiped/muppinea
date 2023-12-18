@@ -6,7 +6,7 @@ class Message {
   late String fromId;
   late String sent;
   late String edited;
-  late String reply;
+  late List reply;
 
   Message(
       {required this.msg,
@@ -25,7 +25,7 @@ class Message {
     type = json['type'].toString() == Type.image.name ? Type.image : Type.text;
     fromId = json['fromId'].toString();
     sent = json['sent'].toString();
-    reply = json["reply"].toString();
+    reply = json["reply"];
     if (json.containsKey("edited")) {
       edited = json["edited"].toString();
     } else {

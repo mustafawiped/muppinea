@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_string_interpolations
+
 import 'package:flutter/material.dart';
 
 class DateUtil {
@@ -65,6 +67,77 @@ class DateUtil {
     String month = _getMonth(time);
 
     return 'Son giriş ${time.day} $month saat $formattedTime';
+  }
+
+  static String getMessageTimes(
+      {required BuildContext context, required String lastActive}) {
+    final int i = int.tryParse(lastActive) ?? -1;
+
+    //if time is not available then return below statement
+    if (i == -1) return 'zaman bilinmiyor.';
+
+    DateTime time = DateTime.fromMillisecondsSinceEpoch(i);
+    DateTime now = DateTime.now();
+
+    String formattedTime = TimeOfDay.fromDateTime(time).format(context);
+    if (time.day == now.day &&
+        time.month == now.month &&
+        time.year == time.year) {
+      return formattedTime;
+    }
+
+    if ((now.difference(time).inHours / 24).round() == 1) {
+      return 'dün $formattedTime';
+    }
+
+    String month = _getMonth(time);
+
+    return '${time.day} $month saat $formattedTime';
+  }
+
+  static String getJoinedDate(
+      {required BuildContext context, required String lastActive}) {
+    final int i = int.tryParse(lastActive) ?? -1;
+
+    if (i == -1) return 'zaman bilinmiyor.';
+
+    DateTime time = DateTime.fromMillisecondsSinceEpoch(i);
+    DateTime now = DateTime.now();
+
+    String formattedTime = TimeOfDay.fromDateTime(time).format(context);
+    if (time.day == now.day &&
+        time.month == now.month &&
+        time.year == now.year) {
+      return formattedTime;
+    }
+
+    if ((now.difference(time).inHours / 24).round() == 1) {
+      return 'dün $formattedTime';
+    }
+
+    String month = longMonth(time);
+    String year = (now.year > time.year) ? ' ${time.year}' : '';
+
+    return '${time.day} $month $year saat $formattedTime';
+  }
+
+  static String longMonth(DateTime time) {
+    const List<String> months = [
+      'Ocak',
+      'Şubat',
+      'Mart',
+      'Nisan',
+      'Mayıs',
+      'Haziran',
+      'Temmuz',
+      'Ağustos',
+      'Eylül',
+      'Ekim',
+      'Kasım',
+      'Aralık',
+    ];
+
+    return months[time.month - 1];
   }
 
   static String _getMonth(DateTime date) {

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+// ignore: constant_identifier_names
 const double BUBBLE_RADIUS_IMAGE = 16;
 
 ///basic image bubble type
@@ -33,6 +34,7 @@ class BubbleNormalImage extends StatelessWidget {
   final bool sent;
   final bool delivered;
   final bool seen;
+  final String time;
   final void Function()? onTap;
 
   const BubbleNormalImage({
@@ -46,6 +48,7 @@ class BubbleNormalImage extends StatelessWidget {
     this.sent = false,
     this.delivered = false,
     this.seen = false,
+    this.time = "",
     this.onTap,
   }) : super(key: key);
 
@@ -122,6 +125,30 @@ class BubbleNormalImage extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(bubbleRadius),
                             child: image,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 4,
+                        right: isSender ? 30 : 10,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.8),
+                                spreadRadius: 5,
+                                blurRadius: 10,
+                                offset: Offset(-1, 0),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            "13:43",
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 10,
+                            ),
+                            textAlign: TextAlign.left,
                           ),
                         ),
                       ),

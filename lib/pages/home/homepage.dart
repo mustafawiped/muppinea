@@ -1,10 +1,11 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_typing_uninitialized_variables
 
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:src/dialogs/awesome.dart';
 import 'package:src/models/usermodel.dart';
+import 'package:src/pages/home/profilepage.dart';
 import 'package:src/services/apis/users.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/widgets/components/boxs/chatbox.dart';
@@ -75,6 +76,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       IconButton(
                         onPressed: () {
+                          if (loading) return;
                           _globalKey.currentState!.openDrawer();
                         },
                         icon: const Icon(
@@ -107,6 +109,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       TextButton(
                           onPressed: () {
+                            if (loading) return;
                             setState(() {
                               TabState = 1;
                             });
@@ -123,6 +126,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       TextButton(
                           onPressed: () {
+                            if (loading) return;
                             setState(() {
                               TabState = 2;
                             });
@@ -139,6 +143,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       TextButton(
                           onPressed: () {
+                            if (loading) return;
                             awesomeDialog().show(
                                 context,
                                 "Burası yapım aşamasında!",
@@ -292,7 +297,8 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: TabState == 3
           ? null
           : FloatingActionButton(
-              onPressed: () {
+              onPressed: () async {
+                await APIs.updateActiveStatus(false, true);
                 AuthService.signOut();
               },
               backgroundColor: const Color.fromARGB(255, 73, 47, 85),
@@ -308,6 +314,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// ignore: camel_case_types
 class createDrawer extends StatelessWidget {
   const createDrawer({super.key});
 
@@ -356,19 +363,38 @@ class createDrawer extends StatelessWidget {
                       const SizedBox(
                         width: 12,
                       ),
-                      Text(
-                        AuthService.me.username,
-                        style: const TextStyle(color: Colors.white),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AuthService.me.username,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          Text(
+                            AuthService.me.email,
+                            style: const TextStyle(
+                                color: Colors.grey, fontSize: 12),
+                          ),
+                        ],
                       )
                     ],
                   ),
                   const SizedBox(
                     height: 30,
                   ),
-                  const createDrawerItem(
-                    headerText: "Profil",
-                    icon: Icons.person,
-                    color: Colors.white,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  ProfilePage(user: AuthService.me)));
+                    },
+                    child: const createDrawerItem(
+                      headerText: "Profil",
+                      icon: Icons.person,
+                      color: Colors.white,
+                    ),
                   ),
                   const createDrawerItem(
                     headerText: "Bildirim Ayarları",
@@ -382,7 +408,7 @@ class createDrawer extends StatelessWidget {
                   ),
                   const createDrawerItem(
                     headerText: "Sohbet Ayarı",
-                    icon: Icons.storage,
+                    icon: Icons.chat,
                     color: Colors.white,
                   ),
                   const createDrawerItem(
@@ -432,26 +458,23 @@ class createDrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {},
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 25.0),
-        child: Row(
-          children: [
-            Icon(
-              icon as IconData?,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(
-              width: 20,
-            ),
-            Text(
-              headerText,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            )
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 25.0),
+      child: Row(
+        children: [
+          Icon(
+            icon as IconData?,
+            color: Colors.white,
+            size: 20,
+          ),
+          const SizedBox(
+            width: 20,
+          ),
+          Text(
+            headerText,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+          )
+        ],
       ),
     );
   }
