@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:src/dialogs/profiledialog.dart';
 import 'package:src/models/messagemodel.dart';
 import 'package:src/models/usermodel.dart';
 import 'package:src/pages/chat/chatpage.dart';
@@ -52,7 +53,14 @@ class createChatMsg extends StatelessWidget {
                   return ListTile(
                     // kullanıcı profil fotoğrafı
                     leading: InkWell(
-                        onTap: () {},
+                        onTap: () {
+                          print("sa");
+                          showDialog(
+                              context: context,
+                              builder: (_) => ProfileDialog(
+                                    user: userDt,
+                                  ));
+                        },
                         child: UserAvatar(filename: userDt.image)),
 
                     // kullanıcı adı

@@ -11,7 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:src/dialogs/awesome.dart';
 import 'package:src/models/messagemodel.dart';
 import 'package:src/models/usermodel.dart';
-import 'package:src/pages/home/profilepage.dart';
+import 'package:src/pages/profile/profilepage.dart';
 import 'package:src/services/apis/users.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/widgets/components/boxs/messagebox.dart';

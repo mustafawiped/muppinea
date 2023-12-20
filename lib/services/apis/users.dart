@@ -63,6 +63,8 @@ class APIs {
         .snapshots();
   }
 
+// CHAT METHODS START //
+
   static String getConversationID(String id) =>
       AuthService.user.uid.hashCode <= id.hashCode
           ? "${AuthService.user.uid}_$id"
@@ -148,5 +150,30 @@ class APIs {
     if (message.type == Type.image) {
       await storage.refFromURL(message.msg).delete();
     }
+  }
+
+// CHAT METHODS END //
+
+  // update profile picture
+  static Future<void> updateProfilePicture(File file) async {
+    final ext = file.path.split(".").last;
+    final ref =
+        storage.ref().child("profile_pictures/${AuthService.user.uid}.$ext");
+    await ref
+        .putFile(file, SettableMetadata(contentType: 'image/$ext'))
+        .then((p0) async {
+      AuthService.me.image = await ref.getDownloadURL();
+      await fstore
+          .collection("Users")
+          .doc(AuthService.user.uid)
+          .update({"image": AuthService.me.image});
+    });
+  }
+
+  // update user details
+  static Future<void> updateUserInfo(String key, value) async {
+    await fstore.collection("Users").doc(AuthService.user.uid).update({
+      key: value,
+    });
   }
 }

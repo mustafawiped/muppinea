@@ -1,34 +1,31 @@
-// ignore_for_file: camel_case_types, file_names
+// ignore_for_file: file_names
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-class createVerifyCodeTextfield extends StatelessWidget {
+// ignore: camel_case_types
+class createAboutTextfield extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final Function(String)? changed;
   final bool errorState;
   final String errorText;
-  final bool enabled;
-  const createVerifyCodeTextfield({
+  const createAboutTextfield({
     super.key,
     required this.controller,
     required this.hintText,
     required this.changed,
     required this.errorState,
     required this.errorText,
-    required this.enabled,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
-      maxLength: 11,
+      maxLength: 300,
       onChanged: changed,
-      enabled: enabled,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       controller: controller,
-      keyboardType: TextInputType.number,
+      minLines: 4,
+      maxLines: 5,
       decoration: InputDecoration(
         enabledBorder:
             OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
@@ -42,10 +39,6 @@ class createVerifyCodeTextfield extends StatelessWidget {
             OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
         hintText: hintText,
         hintStyle: const TextStyle(color: Colors.grey),
-        prefixIcon: const Icon(
-          Icons.lock_clock_sharp,
-          color: Color.fromARGB(255, 32, 32, 32),
-        ),
         fillColor: Colors.white,
         filled: true,
         border: InputBorder.none,

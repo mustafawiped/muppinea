@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:src/dialogs/awesome.dart';
 import 'package:src/models/usermodel.dart';
-import 'package:src/pages/home/profilepage.dart';
+import 'package:src/pages/profile/profilepage.dart';
 import 'package:src/services/apis/users.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/widgets/components/boxs/chatbox.dart';
@@ -357,27 +357,36 @@ class createDrawer extends StatelessWidget {
                   const SizedBox(
                     height: 30,
                   ),
-                  Row(
-                    children: [
-                      UserAvatar(filename: AuthService.me.image),
-                      const SizedBox(
-                        width: 12,
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AuthService.me.username,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          Text(
-                            AuthService.me.email,
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 12),
-                          ),
-                        ],
-                      )
-                    ],
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  ProfilePage(user: AuthService.me)));
+                    },
+                    child: Row(
+                      children: [
+                        UserAvatar(filename: AuthService.me.image),
+                        const SizedBox(
+                          width: 12,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AuthService.me.username,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            Text(
+                              AuthService.me.email,
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
                   const SizedBox(
                     height: 30,
@@ -391,7 +400,7 @@ class createDrawer extends StatelessWidget {
                                   ProfilePage(user: AuthService.me)));
                     },
                     child: const createDrawerItem(
-                      headerText: "Profil",
+                      headerText: "Hesap Ayarları",
                       icon: Icons.person,
                       color: Colors.white,
                     ),

@@ -631,6 +631,7 @@ class _RegisterPageState extends State<RegisterPage> {
         changed: verifyErrorCatcher,
         controller: verifyController,
         errorState: verifyErrorState,
+        enabled: true,
         errorText: verifyErrorMessage,
         hintText: "Doğrulama Kodu",
       );
