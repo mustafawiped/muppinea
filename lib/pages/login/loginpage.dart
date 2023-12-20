@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:src/pages/unregister/registerpage.dart';
-import 'package:src/pages/unregister/saveaccount.dart';
+import 'package:src/pages/login/registerpage.dart';
+import 'package:src/pages/login/saveaccount.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/widgets/components/inputs/emailTextfield.dart';
 import 'package:src/widgets/components/inputs/passwordTextfield.dart';

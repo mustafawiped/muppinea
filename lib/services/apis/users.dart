@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:src/models/messagemodel.dart';
+import 'package:src/models/searchmodel.dart';
 import 'package:src/models/usermodel.dart';
 import 'package:src/services/auth/authservice.dart';
 
@@ -175,5 +176,54 @@ class APIs {
     await fstore.collection("Users").doc(AuthService.user.uid).update({
       key: value,
     });
+  }
+
+  Future<List<searchUserDatas>> searchUsers(String searchTerm) async {
+    List<searchUserDatas> userList = [];
+    try {
+      QuerySnapshot querySnapshot = await usersCollection
+          .where('username', isGreaterThanOrEqualTo: searchTerm)
+          .where('username', isLessThan: '${searchTerm}z')
+          .limit(25)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+          userList.add(searchUserDatas(
+            username: doc['username'],
+            pp: doc['image'],
+            documentId: doc.id,
+            about: doc['about'],
+          ));
+          print("döngü çalıştı..");
+        }
+        print("yapacakbiseyyok: ${userList.length}");
+      } else {
+        print('Kullanıcı bulunamadı');
+      }
+    } catch (e) {
+      print('Hata oluştu: $e');
+    }
+
+    return userList;
+  }
+
+  static Future<userData?> fetchData(String documentId) async {
+    try {
+      DocumentSnapshot documentSnapshot =
+          await usersCollection.doc(documentId).get();
+      if (documentSnapshot.exists) {
+        Map<String, dynamic> data =
+            documentSnapshot.data() as Map<String, dynamic>;
+        userData user = userData.fromMap(data);
+        return user;
+      } else {
+        print("Belge bulunamadı!");
+        return null;
+      }
+    } catch (e) {
+      print("Hata: $e");
+      return null;
+    }
   }
 }

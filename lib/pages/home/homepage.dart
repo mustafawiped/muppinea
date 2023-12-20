@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:src/dialogs/awesome.dart';
 import 'package:src/models/usermodel.dart';
+import 'package:src/pages/home/searchpage.dart';
 import 'package:src/pages/profile/profilepage.dart';
 import 'package:src/services/apis/users.dart';
 import 'package:src/services/auth/authservice.dart';
@@ -298,8 +299,8 @@ class _HomePageState extends State<HomePage> {
           ? null
           : FloatingActionButton(
               onPressed: () async {
-                await APIs.updateActiveStatus(false, true);
-                AuthService.signOut();
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (_) => searchScreen()));
               },
               backgroundColor: const Color.fromARGB(255, 73, 47, 85),
               child: const Icon(
@@ -309,14 +310,21 @@ class _HomePageState extends State<HomePage> {
             ),
 
       // drawer oluşturma
-      drawer: const createDrawer(),
+      drawer: createDrawer(
+        onTap: () {
+          if (loading) return;
+          _globalKey.currentState!.closeDrawer();
+        },
+      ),
     );
   }
 }
 
 // ignore: camel_case_types
 class createDrawer extends StatelessWidget {
-  const createDrawer({super.key});
+  const createDrawer({super.key, this.onTap});
+
+  final Function()? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -338,17 +346,20 @@ class createDrawer extends StatelessWidget {
             children: [
               Column(
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                        size: 20,
+                      InkWell(
+                        onTap: onTap,
+                        child: const Icon(
+                          Icons.arrow_back_ios,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 56,
                       ),
-                      Text(
+                      const Text(
                         "Genel Bakış",
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       )
@@ -436,10 +447,24 @@ class createDrawer extends StatelessWidget {
                   const SizedBox(
                     height: 20,
                   ),
-                  const createDrawerItem(
-                    headerText: "Çıkış Yap",
-                    icon: Icons.logout,
-                    color: Colors.white,
+                  GestureDetector(
+                    onTap: () {
+                      awesomeDialog().show(
+                          context,
+                          "Hey, emin misin?",
+                          "Hesabından çıkış yapmak istediğine emin misin?",
+                          "Çıkış Yap",
+                          "Değilim",
+                          DialogType.warning, () async {
+                        await APIs.updateActiveStatus(false, true);
+                        AuthService.signOut();
+                      }, () {});
+                    },
+                    child: const createDrawerItem(
+                      headerText: "Çıkış Yap",
+                      icon: Icons.logout,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
