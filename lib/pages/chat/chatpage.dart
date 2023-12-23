@@ -27,7 +27,7 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   static final FocusNode focusNode = FocusNode();
   List<Message> _list = [];
 
@@ -43,11 +43,22 @@ class _ChatPageState extends State<ChatPage> {
 
   late Size mq;
 
+  bool state = false;
+
   @override
   void initState() {
     super.initState();
+    state = true;
+
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Color.fromARGB(255, 32, 32, 32),
+      statusBarIconBrightness: Brightness.light,
+    ));
 
     SystemChannels.lifecycle.setMessageHandler((message) {
+      if (!state) {
+        return Future.value(message);
+      }
       if (message == "AppLifecycleState.resumed") {
         setState(() {
           appLifeStyle = true;
@@ -65,6 +76,14 @@ class _ChatPageState extends State<ChatPage> {
       }
       return Future.value(message);
     });
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    state = false;
+    WidgetsBinding.instance.removeObserver(this);
   }
 
   @override
@@ -126,7 +145,7 @@ class _ChatPageState extends State<ChatPage> {
           borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(20),
               bottomRight: Radius.circular(20)),
-          color: Color.fromARGB(255, 73, 47, 85),
+          color: Color.fromARGB(255, 32, 32, 32),
         ),
         child: InkWell(
           onTap: () {

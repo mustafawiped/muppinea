@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
       }
     });
 
-    SystemChannels.lifecycle.setMessageHandler((message) {
+    /*SystemChannels.lifecycle.setMessageHandler((message) {
       if (AuthService.auth.currentUser != null) {
         if (message == "AppLifecycleState.resumed") {
           APIs.updateActiveStatus(true, false);
@@ -55,7 +55,7 @@ class _HomePageState extends State<HomePage> {
       }
 
       return Future.value(message);
-    });
+    });*/
   }
 
   @override

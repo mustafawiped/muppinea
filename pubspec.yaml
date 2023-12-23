@@ -48,6 +48,7 @@ flutter:
     - assets/images/chat_bg.jpeg
     - assets/images/camera.png
     - assets/images/gallery.png
+    - assets/images/msgempty.png
 
     - assets/badges/bughunter.png
     - assets/badges/erkendonemdestekcisi.png

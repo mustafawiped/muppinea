@@ -1,7 +1,13 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:src/dialogs/awesome.dart';
 import 'package:src/models/usermodel.dart';
 import 'package:src/pages/profile/profileedit.dart';
+import 'package:src/services/apis/friendrequests.dart';
+import 'package:src/services/apis/friends.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/services/shippers/badges.dart';
 import 'package:src/widgets/components/numberswidget.dart';
@@ -20,6 +26,16 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool isMe = false;
   bool isLoading = true;
+  bool isButtonLoading = false;
+
+  // butonun durumu için tanımlanan şeyler
+  bool isFriend = false;
+  bool isRequest = false;
+
+  int friendLength = 0;
+
+  // profili görünen kişi, şuanki bakan kullanıcıya istek gönderdi mi göndermedi mi kontrolü
+  bool userRequest = false;
 
   @override
   void initState() {
@@ -29,18 +45,209 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  void initConfigures() {
+  void initConfigures() async {
     isMe = widget.user.id == AuthService.me.id;
+    if (!isMe) {
+      isRequest = await friendRequestsDb.containsField(
+          widget.user.id, AuthService.me.id);
+      List list = await FriendsDb.containsField(
+          widget.user.id, AuthService.me.id, true);
+      if (list.isNotEmpty) {
+        isFriend = list[0];
+        friendLength = list[1];
+      }
+      friendRequestsDb
+          .containsField(AuthService.me.id, widget.user.id)
+          .then((value) {
+        setState(() {
+          userRequest = value;
+        });
+      });
+    } else {
+      List list = await FriendsDb.containsField(
+          AuthService.me.id, widget.user.id, false);
+      if (list.isNotEmpty) {
+        friendLength = list[1];
+      }
+    }
     setState(() {
       isLoading = false;
     });
   }
 
-  void btnOnClick() {
+  void btnOnClick() async {
     if (isMe) {
       Navigator.push(context,
           MaterialPageRoute(builder: (_) => ProfileEdit(user: widget.user)));
+    } else {
+      if (isFriend) {
+        unfriendShow();
+      } else if (isRequest) {
+        setState(() {
+          isButtonLoading = true;
+        });
+        bool state = await friendRequestsDb.deleteField(
+            widget.user.id, AuthService.me.id);
+        if (state) {
+          setState(() {
+            isButtonLoading = false;
+            isRequest = false;
+          });
+        } else {
+          setState(() {
+            isButtonLoading = false;
+          });
+          awesomeDialog().show(
+              context,
+              "Hata!",
+              "Arkadaşlık isteğini geri alırken bir sorun oluştu. Daha sonra tekrar dene.",
+              "Tamam",
+              "",
+              DialogType.error,
+              () {},
+              null);
+        }
+      } else {
+        setState(() {
+          isButtonLoading = true;
+        });
+        bool state = await friendRequestsDb.sendRequest(widget.user.id);
+        if (state) {
+          setState(() {
+            isButtonLoading = false;
+            isRequest = true;
+          });
+        } else {
+          setState(() {
+            isButtonLoading = false;
+          });
+          awesomeDialog().show(
+              context,
+              "Hata!",
+              "Arkadaşlık isteği gönderirken bir sorun oluştu. Daha sonra tekrar dene.",
+              "Tamam",
+              "",
+              DialogType.error,
+              () {},
+              null);
+        }
+      }
     }
+  }
+
+  void unfriendShow() {
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 32, 32, 32),
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Emin misin?',
+                style: TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 16.0),
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: 'Eğer ',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    TextSpan(
+                      text: widget.user.username,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const TextSpan(
+                      text:
+                          ' arkadaşlıktan çıkarırsan, onun hakkında daha az bilgi alacaksın ve tekrar arkadaş olabilmek için, tekrar istek göndermen gerekecek.',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      minimumSize: const Size(150, 40),
+                    ),
+                    child: const Text("Vazgeç",
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      setState(() {
+                        isButtonLoading = true;
+                      });
+                      await FriendsDb.deleteField(
+                          AuthService.me.id, widget.user.id);
+                      await FriendsDb.deleteField(
+                          widget.user.id, AuthService.me.id);
+                      setState(() {
+                        --friendLength;
+                        isFriend = false;
+                        isButtonLoading = false;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      minimumSize: const Size(150, 40),
+                    ),
+                    child: const Text("Çıkar",
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> btnRequestAcceptOrReject(bool state) async {
+    setState(() {
+      isButtonLoading = true;
+    });
+    await friendRequestsDb.deleteField(AuthService.me.id, widget.user.id);
+    if (state) {
+      await FriendsDb.addFriend(AuthService.me.id, widget.user.id);
+      await FriendsDb.addFriend(widget.user.id, AuthService.me.id);
+      isFriend = true;
+      ++friendLength;
+    }
+    setState(() {
+      isButtonLoading = false;
+      userRequest = false;
+    });
   }
 
   @override
@@ -66,16 +273,28 @@ class _ProfilePageState extends State<ProfilePage> {
                       ))
                 ],
         ),
-        body: Padding(
-          padding: EdgeInsets.symmetric(horizontal: mq.width * .05),
-          child: SingleChildScrollView(
-            child: Center(
-              child: isLoading
-                  ? const CircularProgressIndicator(
-                      color: Colors.white,
-                    )
-                  : Column(
+        body: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              )
+            : Padding(
+                padding: EdgeInsets.symmetric(horizontal: mq.width * .05),
+                child: SingleChildScrollView(
+                  child: Center(
+                    child: Column(
                       children: [
+                        if (userRequest)
+                          // friend request
+                          buildFriendRequest(),
+
+                        if (userRequest)
+                          //sizedbox
+                          const SizedBox(
+                            height: 24,
+                          ),
+
                         // profile photo
                         profilePhotoWidget(mq),
 
@@ -94,7 +313,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         //add friend button or profile edit button
                         buildAddFriendButton(
-                            isMe ? "Profili Düzenle" : "Arkadaş Ekle",
+                            isMe
+                                ? "Profili Düzenle"
+                                : isFriend
+                                    ? "Arkadaşsınız"
+                                    : isRequest
+                                        ? "İstek Gönderildi"
+                                        : "Arkadaş Ekle",
                             btnOnClick),
 
                         //sized box
@@ -102,7 +327,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         //friends and popularity
                         NumbersWidget(
-                            friendCount: "0",
+                            friendCount: friendLength.toString(),
                             popularity: "1.0",
                             badgeCount: widget.user.badges.length.toString()),
 
@@ -147,9 +372,84 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                       ],
                     ),
+                  ),
+                ),
+              ));
+  }
+
+  Widget buildFriendRequest() {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 48),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Bu kullanıcı sana arkadaşlık isteği göndermiş!",
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.4,
+              color: Colors.grey,
             ),
+            textAlign: TextAlign.center,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
           ),
-        ));
+          const SizedBox(
+            height: 5,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 40,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 12),
+                  ),
+                  onPressed: isButtonLoading
+                      ? null
+                      : () => btnRequestAcceptOrReject(true),
+                  child: isButtonLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text("Kabul et"),
+                ),
+              ),
+              const SizedBox(
+                width: 5,
+              ),
+              SizedBox(
+                height: 40,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey,
+                    foregroundColor: const Color.fromARGB(255, 32, 32, 32),
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 12),
+                  ),
+                  onPressed: isButtonLoading
+                      ? null
+                      : () => btnRequestAcceptOrReject(false),
+                  child: isButtonLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text("X"),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget profilePhotoWidget(Size mq) {
@@ -214,8 +514,12 @@ class _ProfilePageState extends State<ProfilePage> {
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
       ),
-      onPressed: onClicked,
-      child: Text(text),
+      onPressed: isButtonLoading ? null : onClicked,
+      child: isButtonLoading
+          ? const CircularProgressIndicator(
+              color: Colors.white,
+            )
+          : Text(text),
     );
   }
 
