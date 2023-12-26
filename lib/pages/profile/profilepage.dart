@@ -4,10 +4,14 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:src/dialogs/awesome.dart';
+import 'package:src/dialogs/messagerequest.dart';
 import 'package:src/models/usermodel.dart';
+import 'package:src/pages/chat/chatpage.dart';
+import 'package:src/pages/others/friendspage.dart';
 import 'package:src/pages/profile/profileedit.dart';
 import 'package:src/services/apis/friendrequests.dart';
 import 'package:src/services/apis/friends.dart';
+import 'package:src/services/apis/notifications.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/services/shippers/badges.dart';
 import 'package:src/widgets/components/numberswidget.dart';
@@ -27,6 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isMe = false;
   bool isLoading = true;
   bool isButtonLoading = false;
+  bool isMsgButtonLoading = false;
 
   // butonun durumu için tanımlanan şeyler
   bool isFriend = false;
@@ -250,6 +255,35 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  Future<void> btnSendMessage() async {
+    if (isFriend) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (_) => ChatPage(otherUser: widget.user)));
+    } else {
+      setState(() {
+        isMsgButtonLoading = true;
+      });
+      bool state = await NotificationsDb.containsField(
+          widget.user.id, AuthService.me.id);
+      setState(() {
+        isMsgButtonLoading = false;
+      });
+      if (state) {
+        awesomeDialog().show(
+            context,
+            "İstek Gönderemezsiniz.",
+            "Zaten bu kullanıcıya daha önceden mesaj isteği göndermişsiniz. Kullanıcı isteğinize yanıt verene kadar yeni bir istek gönderemezsiniz.",
+            "Tamam",
+            "",
+            DialogType.error,
+            () {},
+            null);
+      } else {
+        messageRequest().messageReq(context, widget.user.id);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Size mq = MediaQuery.of(context).size;
@@ -312,24 +346,45 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
 
                         //add friend button or profile edit button
-                        buildAddFriendButton(
-                            isMe
-                                ? "Profili Düzenle"
-                                : isFriend
-                                    ? "Arkadaşsınız"
-                                    : isRequest
-                                        ? "İstek Gönderildi"
-                                        : "Arkadaş Ekle",
-                            btnOnClick),
+                        createButtons(),
 
                         //sized box
                         const SizedBox(height: 24),
 
                         //friends and popularity
                         NumbersWidget(
-                            friendCount: friendLength.toString(),
-                            popularity: "1.0",
-                            badgeCount: widget.user.badges.length.toString()),
+                          friendCount: friendLength.toString(),
+                          popularity: "1.0",
+                          badgeCount: widget.user.badges.length.toString(),
+                          friendOnClick: isFriend || isMe
+                              ? () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => FriendsPage(
+                                            user: widget.user,
+                                            isMe: isMe,
+                                          )))
+                              : () {
+                                  String alertString = isRequest
+                                      ? "${widget.user.username} adlı kullanıcıya arkadaşlık isteği gönderdin ama henüz cevaplamadı. Arkadaşı olduğunda görebileceksin."
+                                      : "${widget.user.username} adlı kullanıcı arkadaşın olmadığı için onun arkadaşlarını göremezsin. Arkadaş olmak için istek atmak ister misin?";
+                                  awesomeDialog().show(
+                                      context,
+                                      "${widget.user.username} arkadaşı değilsin.",
+                                      alertString,
+                                      isRequest ? "Tamam" : "Hayır",
+                                      isRequest ? "" : "Evet",
+                                      DialogType.info,
+                                      () {},
+                                      isRequest
+                                          ? null
+                                          : () {
+                                              btnOnClick();
+                                            });
+                                },
+                          badgeOnClick: () {},
+                          popularityOnClick: () {},
+                        ),
 
                         //sized box
                         const SizedBox(
@@ -375,6 +430,31 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ));
+  }
+
+  Widget createButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        buildAddFriendButton(
+            isMe
+                ? "Profili Düzenle"
+                : isFriend
+                    ? "Arkadaşsınız"
+                    : isRequest
+                        ? "İstek Gönderildi"
+                        : "Arkadaş Ekle",
+            btnOnClick,
+            isButtonLoading),
+        if (!isMe)
+          const SizedBox(
+            width: 10,
+          ),
+        if (!isMe)
+          buildAddFriendButton(
+              "Mesaj Gönder", btnSendMessage, isMsgButtonLoading),
+      ],
+    );
   }
 
   Widget buildFriendRequest() {
@@ -506,18 +586,23 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget buildAddFriendButton(String text, VoidCallback onClicked) {
+  Widget buildAddFriendButton(
+      String text, VoidCallback onClicked, bool loading) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.grey,
         foregroundColor: const Color.fromARGB(255, 32, 32, 32),
         shape: const StadiumBorder(),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        padding: loading
+            ? const EdgeInsets.symmetric(horizontal: 52, vertical: 6)
+            : const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
       ),
       onPressed: isButtonLoading ? null : onClicked,
-      child: isButtonLoading
+      child: loading
           ? const CircularProgressIndicator(
               color: Colors.white,
+              strokeAlign: -6,
+              strokeWidth: 3,
             )
           : Text(text),
     );

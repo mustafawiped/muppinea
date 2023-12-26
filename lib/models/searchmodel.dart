@@ -11,4 +11,13 @@ class searchUserDatas {
       required this.pp,
       required this.documentId,
       required this.about});
+
+  factory searchUserDatas.fromMap(Map<String, dynamic> map) {
+    return searchUserDatas(
+      username: map['username'] ?? '',
+      pp: map['image'] ?? '',
+      documentId: map['id'] ?? '',
+      about: map['about'] ?? '',
+    );
+  }
 }

@@ -20,7 +20,8 @@ class ProfileUpdate extends StatefulWidget {
 
 class _ProfileUpdateState extends State<ProfileUpdate> {
   // STEP 1   USERNAME start//
-  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController usernameController =
+      TextEditingController(text: AuthService.me.username);
   bool usernameErrorState = false;
   String usernameErrorMessage = "";
   void usernameErrorCatcher(String text) {

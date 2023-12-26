@@ -6,22 +6,28 @@ class NumbersWidget extends StatelessWidget {
   final String friendCount;
   final String popularity;
   final String badgeCount;
+  final Function() friendOnClick;
+  final Function() popularityOnClick;
+  final Function() badgeOnClick;
 
   const NumbersWidget(
       {super.key,
       required this.friendCount,
       required this.popularity,
-      required this.badgeCount});
+      required this.badgeCount,
+      required this.friendOnClick,
+      required this.popularityOnClick,
+      required this.badgeOnClick});
 
   @override
   Widget build(BuildContext context) => Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          buildButton(context, friendCount, 'Arkadaşlar'),
+          buildButton(context, friendCount, 'Arkadaşlar', friendOnClick),
           buildDivider(),
-          buildButton(context, popularity, 'Popülerlik'),
+          buildButton(context, popularity, 'Popülerlik', popularityOnClick),
           buildDivider(),
-          buildButton(context, badgeCount, 'Rozetler'),
+          buildButton(context, badgeCount, 'Rozetler', badgeOnClick),
         ],
       );
   Widget buildDivider() => Container(
@@ -29,10 +35,11 @@ class NumbersWidget extends StatelessWidget {
         child: const VerticalDivider(),
       );
 
-  Widget buildButton(BuildContext context, String value, String text) =>
+  Widget buildButton(BuildContext context, String value, String text,
+          Function()? onClick) =>
       MaterialButton(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        onPressed: () {},
+        onPressed: onClick,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         child: Column(
           mainAxisSize: MainAxisSize.min,

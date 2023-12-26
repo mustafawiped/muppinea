@@ -51,10 +51,8 @@ class createChatMsg extends StatelessWidget {
                   }
 
                   return ListTile(
-                    // kullanıcı profil fotoğrafı
                     leading: InkWell(
                         onTap: () {
-                          print("sa");
                           showDialog(
                               context: context,
                               builder: (_) => ProfileDialog(

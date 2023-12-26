@@ -31,6 +31,8 @@ dependencies:
   image_cropper: ^5.0.1
   url_launcher: ^6.2.2
   sqflite: ^2.3.0
+  path: ^1.8.3
+  fluttertoast: ^8.2.4
 
 dev_dependencies:
   flutter_test:
@@ -49,6 +51,7 @@ flutter:
     - assets/images/camera.png
     - assets/images/gallery.png
     - assets/images/msgempty.png
+    - assets/images/building.png
 
     - assets/badges/bughunter.png
     - assets/badges/erkendonemdestekcisi.png

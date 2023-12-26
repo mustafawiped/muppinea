@@ -267,7 +267,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         children: [
           Expanded(
             child: Card(
-              color: const Color.fromARGB(255, 73, 47, 85),
+              color: const Color.fromARGB(255, 50, 50, 50),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15)),
               child: Column(
@@ -511,7 +511,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             padding:
                 const EdgeInsets.only(top: 10, bottom: 10, right: 5, left: 10),
             shape: const CircleBorder(),
-            color: Colors.blue,
+            color: const Color.fromARGB(255, 73, 47, 85),
             child: const Icon(
               Icons.send,
               color: Colors.white,

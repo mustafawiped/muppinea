@@ -12,6 +12,8 @@ import 'package:src/services/local_database/recents.dart';
 
 // ignore: camel_case_types
 class searchScreen extends StatefulWidget {
+  const searchScreen({super.key});
+
   @override
   // ignore: library_private_types_in_public_api
   _searchScreenState createState() => _searchScreenState();
@@ -53,7 +55,6 @@ class _searchScreenState extends State<searchScreen> {
     if (searchText.isNotEmpty && containsLetter(searchText)) {
       searchState = true;
       dataList = await APIs().searchUsers(searchText);
-      print("salih: ${dataList.length}");
       dataList = dataList.reversed.toList();
       setState(() {
         loadState = false;
@@ -80,9 +81,9 @@ class _searchScreenState extends State<searchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 40, 40, 42),
+      backgroundColor: const Color.fromARGB(255, 32, 32, 32),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(154, 73, 47, 85),
+        backgroundColor: const Color.fromARGB(255, 32, 32, 32),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
             bottomLeft: Radius.circular(20.0),

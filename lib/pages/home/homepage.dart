@@ -1,12 +1,15 @@
 // ignore_for_file: non_constant_identifier_names, prefer_typing_uninitialized_variables
 
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:src/dialogs/awesome.dart';
 import 'package:src/models/usermodel.dart';
+import 'package:src/pages/home/notificationpage.dart';
 import 'package:src/pages/home/searchpage.dart';
 import 'package:src/pages/profile/profilepage.dart';
+import 'package:src/services/apis/chathistory.dart';
 import 'package:src/services/apis/users.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/widgets/components/boxs/chatbox.dart';
@@ -38,7 +41,7 @@ class _HomePageState extends State<HomePage> {
       }
     });
 
-    /*SystemChannels.lifecycle.setMessageHandler((message) {
+    SystemChannels.lifecycle.setMessageHandler((message) {
       if (AuthService.auth.currentUser != null) {
         if (message == "AppLifecycleState.resumed") {
           APIs.updateActiveStatus(true, false);
@@ -55,7 +58,7 @@ class _HomePageState extends State<HomePage> {
       }
 
       return Future.value(message);
-    });*/
+    });
   }
 
   @override
@@ -91,7 +94,12 @@ class _HomePageState extends State<HomePage> {
                         height: 110,
                       ),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const NotificationsPage()));
+                        },
                         icon: const Icon(
                           Icons.notifications,
                           color: Colors.white,
@@ -145,15 +153,9 @@ class _HomePageState extends State<HomePage> {
                       TextButton(
                           onPressed: () {
                             if (loading) return;
-                            awesomeDialog().show(
-                                context,
-                                "Burası yapım aşamasında!",
-                                "Muppin Erken Erişim'de olduğu için bu özellik henüz aktif değildir.",
-                                "",
-                                "Tamam",
-                                DialogType.info,
-                                null,
-                                () {});
+                            setState(() {
+                              TabState = 3;
+                            });
                           },
                           child: Text(
                             "Sunucular",
@@ -252,30 +254,80 @@ class _HomePageState extends State<HomePage> {
                           color: Colors.purple,
                         ))
                       : StreamBuilder(
-                          stream: APIs.getAllUsers(),
+                          stream: chatHistoryDb.getChatHistory(),
                           builder: (context, snapshot) {
                             switch (snapshot.connectionState) {
+                              //if data is loading
                               case ConnectionState.waiting:
                               case ConnectionState.none:
                                 return const Center(
                                     child: CircularProgressIndicator());
 
+                              //if some or all data is loaded then show it
                               case ConnectionState.active:
                               case ConnectionState.done:
-                                final data = snapshot.data?.docs;
-                                List list = data
-                                        ?.map((e) => userData.fromMap(e.data()))
-                                        .toList() ??
-                                    [];
+                                return StreamBuilder(
+                                    stream:
+                                        APIs.getAllUsers(snapshot.data!.docs),
+                                    builder: (context, snapshot) {
+                                      switch (snapshot.connectionState) {
+                                        case ConnectionState.waiting:
+                                        case ConnectionState.none:
+                                          return const Center(
+                                              child:
+                                                  CircularProgressIndicator());
 
-                                return ListView.builder(
-                                    padding: const EdgeInsets.only(
-                                        top: 3, left: 5, right: 5),
-                                    itemCount: list.length,
-                                    itemBuilder: (context, index) {
-                                      return createChatMsg(
-                                        userDt: list[index],
-                                      );
+                                        case ConnectionState.active:
+                                        case ConnectionState.done:
+                                          List<
+                                                  DocumentSnapshot<
+                                                      Map<String, dynamic>>>?
+                                              documents = snapshot.data;
+
+                                          List<userData> userList = documents!
+                                              .map((doc) => userData
+                                                  .fromMap(doc.data() ?? {}))
+                                              .toList();
+
+                                          if (userList.isNotEmpty) {
+                                            return ListView.builder(
+                                                padding: const EdgeInsets.only(
+                                                    top: 3, left: 5, right: 5),
+                                                itemCount: userList.length,
+                                                itemBuilder: (context, index) {
+                                                  return createChatMsg(
+                                                    userDt: userList[index],
+                                                  );
+                                                });
+                                          } else {
+                                            return Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Image.asset(
+                                                  "assets/images/msgempty.png",
+                                                  width: 200,
+                                                  height: 200,
+                                                ),
+                                                const SizedBox(
+                                                  height: 10,
+                                                ),
+                                                const Padding(
+                                                  padding: EdgeInsets.only(
+                                                      right: 50, left: 50),
+                                                  child: Text(
+                                                    "Burada sohbet ettiğin kişiler gözükecek ama, henüz kimse yok...",
+                                                    style: TextStyle(
+                                                        color: Colors.grey),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          }
+                                      }
                                     });
                             }
                           }),
@@ -290,6 +342,32 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
+
+            if (TabState == 3)
+              Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      "assets/images/building.png",
+                      width: 200,
+                      height: 200,
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(right: 50, left: 50),
+                      child: Text(
+                        "Burası yapım aşamasında! Yakında burada bir çok sunucu göreceksin ve kendi sunucunu oluşurabileceksin!",
+                        style: TextStyle(color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              )
           ],
         ),
       ),
@@ -299,8 +377,8 @@ class _HomePageState extends State<HomePage> {
           ? null
           : FloatingActionButton(
               onPressed: () async {
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (_) => searchScreen()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const searchScreen()));
               },
               backgroundColor: const Color.fromARGB(255, 73, 47, 85),
               child: const Icon(
@@ -390,9 +468,13 @@ class createDrawer extends StatelessWidget {
                               style: const TextStyle(color: Colors.white),
                             ),
                             Text(
-                              AuthService.me.email,
+                              AuthService.me.email.length > 23
+                                  ? '${AuthService.me.email.substring(0, 21)}..'
+                                  : AuthService.me.email,
                               style: const TextStyle(
                                   color: Colors.grey, fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         )

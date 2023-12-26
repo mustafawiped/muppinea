@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:src/models/messagemodel.dart';
 import 'package:src/models/searchmodel.dart';
 import 'package:src/models/usermodel.dart';
+import 'package:src/services/apis/chathistory.dart';
 import 'package:src/services/auth/authservice.dart';
 
 class APIs {
@@ -48,12 +49,25 @@ class APIs {
         .exists;
   }
 
-  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUsers() {
-    String userId = AuthService.me.id;
+  static Stream<List<DocumentSnapshot<Map<String, dynamic>>>> getAllUsers(
+      List datas) {
+    datas.sort((a, b) => a["time"].compareTo(b["time"]));
+    datas = datas.reversed.toList();
+    List userIds = datas.map((e) => e.id).toList();
+
     return fstore
         .collection('Users')
-        .where('id', isNotEqualTo: userId)
-        .snapshots();
+        .where('id', whereIn: userIds.isEmpty ? [''] : userIds)
+        .snapshots()
+        .map((querySnapshot) {
+      List<DocumentSnapshot<Map<String, dynamic>>> sortedData = userIds
+          .map((userId) => querySnapshot.docs.firstWhere(
+                (doc) => doc['id'] == userId,
+              ))
+          .toList();
+
+      return sortedData;
+    });
   }
 
   static Stream<QuerySnapshot<Map<String, dynamic>>> getUserInfo(
@@ -93,6 +107,9 @@ class APIs {
       edited: "",
       reply: replyState,
     );
+
+    chatHistoryDb.addChatUser(AuthService.user.uid, otherUser.id);
+    chatHistoryDb.addChatUser(otherUser.id, AuthService.user.uid);
 
     final ref =
         fstore.collection('chats/${getConversationID(otherUser.id)}/messages');
@@ -225,5 +242,16 @@ class APIs {
       print("Hata: $e");
       return null;
     }
+  }
+
+  static Future<List<searchUserDatas>> getFriendDetails(
+      String docId, List<String> friendList) async {
+    if (friendList.isEmpty) return [];
+    QuerySnapshot<Map<String, dynamic>> querySnapshot =
+        await fstore.collection('Users').where('id', whereIn: friendList).get();
+
+    return querySnapshot.docs
+        .map((doc) => searchUserDatas.fromMap(doc.data()))
+        .toList();
   }
 }
