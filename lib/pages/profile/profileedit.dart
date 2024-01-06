@@ -229,11 +229,11 @@ class _ProfileEditState extends State<ProfileEdit> {
   itemProfile(String title, String subtitle, IconData iconData) {
     return Container(
       decoration: BoxDecoration(
-          color: Colors.grey,
+          color: const Color.fromARGB(255, 54, 54, 54),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              offset: const Offset(0, 5),
+              offset: const Offset(0, 2),
               color: Colors.white.withOpacity(.1),
               spreadRadius: 2,
               blurRadius: 10,

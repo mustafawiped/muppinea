@@ -18,6 +18,7 @@ class FriendsPage extends StatefulWidget {
 class _FriendsPageState extends State<FriendsPage> {
   bool isLoading = true;
   List<searchUserDatas> myFriends = [];
+  List<searchUserDatas> searchList = [];
 
   @override
   void initState() {
@@ -29,7 +30,24 @@ class _FriendsPageState extends State<FriendsPage> {
 
   Future<void> initConfigures() async {
     List<String> myFriendsIds = await FriendsDb().getFriendsIds(widget.user.id);
-    myFriends = await APIs.getFriendDetails(widget.user.id, myFriendsIds);
+    myFriends = await APIs.getFriendDetails(myFriendsIds);
+    searchList = myFriends;
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  void filterData(String query) async {
+    setState(() {
+      isLoading = true;
+    });
+    searchList = ((myFriends)
+            .where((data) => data.username
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()))
+            .toList())
+        .cast<searchUserDatas>();
     setState(() {
       isLoading = false;
     });
@@ -140,13 +158,9 @@ class _FriendsPageState extends State<FriendsPage> {
         style: const TextStyle(color: Colors.white),
         cursorColor: Colors.purple,
         textInputAction: TextInputAction.search,
-        onSubmitted: (value) {
-          //filterData(value);
-        },
+        onSubmitted: (value) => filterData(value),
         maxLines: 1,
-        onChanged: (String value) {
-          //filterData(value);
-        },
+        onChanged: (String value) => filterData(value),
         decoration: const InputDecoration(
           hintText: 'Ara..',
           hintStyle: TextStyle(color: Color.fromARGB(255, 123, 123, 123)),
@@ -176,10 +190,10 @@ class _FriendsPageState extends State<FriendsPage> {
   Widget createItemList() {
     return ListView.builder(
       shrinkWrap: true,
-      itemCount: myFriends.length,
+      itemCount: searchList.length,
       itemBuilder: (context, index) {
         return createFriendsBox(
-          user: myFriends[index],
+          user: searchList[index],
           isMe: widget.isMe,
           deleteItem: deleteItem,
         );

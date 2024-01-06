@@ -10,6 +10,8 @@ import 'package:src/pages/home/notificationpage.dart';
 import 'package:src/pages/home/searchpage.dart';
 import 'package:src/pages/profile/profilepage.dart';
 import 'package:src/services/apis/chathistory.dart';
+import 'package:src/services/apis/friendrequests.dart';
+import 'package:src/services/apis/notifications.dart';
 import 'package:src/services/apis/users.dart';
 import 'package:src/services/auth/authservice.dart';
 import 'package:src/widgets/components/boxs/chatbox.dart';
@@ -29,6 +31,8 @@ class _HomePageState extends State<HomePage> {
   int TabState = 1;
 
   bool loading = true;
+
+  int notificationLength = 0;
 
   @override
   void initState() {
@@ -96,15 +100,67 @@ class _HomePageState extends State<HomePage> {
                       IconButton(
                         onPressed: () {
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const NotificationsPage()));
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => NotificationsPage(
+                                user: AuthService.me,
+                              ),
+                            ),
+                          ).then((value) {
+                            setState(() {});
+                          });
                         },
-                        icon: const Icon(
-                          Icons.notifications,
-                          color: Colors.white,
+                        icon: Stack(
+                          children: [
+                            const Icon(
+                              Icons.notifications,
+                              color: Colors.white,
+                            ),
+                            StreamBuilder<int>(
+                                stream: friendRequestsDb
+                                    .getNotificationsCountStream(),
+                                builder: (context, friendReqData) {
+                                  return StreamBuilder<int>(
+                                    stream: NotificationsDb
+                                        .getNotificationsCountStream(),
+                                    builder: (BuildContext context,
+                                        AsyncSnapshot<int> snapshot) {
+                                      if (snapshot.data == null) {
+                                        return Container();
+                                      }
+                                      int notifCount = snapshot.data! +
+                                          (friendReqData.data ?? 0);
+                                      if (notifCount > 0) {
+                                        return Positioned(
+                                          right: 0,
+                                          bottom: 0,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Text(
+                                              notifCount > 9
+                                                  ? "+9"
+                                                  : notifCount.toString(),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 9,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        return Container();
+                                      }
+                                    },
+                                  );
+                                }),
+                          ],
                         ),
-                      ),
+                      )
                     ],
                   ),
                 ),

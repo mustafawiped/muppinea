@@ -52,4 +52,14 @@ class chatHistoryDb {
         .orderBy('time', descending: false)
         .snapshots();
   }
+
+  static Future<bool> isChatExists(String docId) async {
+    return (await FirebaseFirestore.instance
+            .collection('chatHistory')
+            .doc(AuthService.user.uid)
+            .collection("my_users")
+            .doc(docId)
+            .get())
+        .exists;
+  }
 }

@@ -1,4 +1,6 @@
 // ignore_for_file: camel_case_types, avoid_print
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:src/services/auth/authservice.dart';
 
@@ -80,5 +82,20 @@ class NotificationsDb {
       print("FriendRequests | containsField | Hata: $e");
       return false;
     }
+  }
+
+  static Stream<int> getNotificationsCountStream() {
+    final StreamController<int> notificationsCountController =
+        StreamController<int>();
+
+    notificationCollection
+        .doc(AuthService.user.uid)
+        .collection("notifications")
+        .snapshots()
+        .listen((QuerySnapshot<Map<String, dynamic>> snapshot) {
+      notificationsCountController.add(snapshot.size);
+    });
+
+    return notificationsCountController.stream;
   }
 }

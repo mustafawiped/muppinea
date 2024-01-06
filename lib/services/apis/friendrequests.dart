@@ -1,5 +1,7 @@
 // ignore_for_file: camel_case_types
 
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:src/services/auth/authservice.dart';
 
@@ -76,5 +78,47 @@ class friendRequestsDb {
       print("FriendRequests | containsField | Hata: $e");
       return false;
     }
+  }
+
+  Future<List<String>> getFriendsIds(String documentId) async {
+    try {
+      DocumentSnapshot documentSnapshot =
+          await requestCollection.doc(documentId).get();
+
+      if (documentSnapshot.exists) {
+        Map<String, dynamic>? data =
+            documentSnapshot.data() as Map<String, dynamic>?;
+
+        if (data != null) {
+          List<String> fieldNames = data.keys.toList();
+
+          return fieldNames.take(40).toList();
+        }
+      }
+
+      return <String>[];
+    } catch (e) {
+      print("FollowersDb | getFollowersIds | Hata: $e");
+      return <String>[];
+    }
+  }
+
+  static Stream<int> getNotificationsCountStream() {
+    final StreamController<int> notificationsCountController =
+        StreamController<int>();
+
+    try {
+      requestCollection.doc(AuthService.user.uid).get().then((value) {
+        if (value.exists) {
+          Map<String, dynamic>? data = value.data()! as Map<String, dynamic>?;
+          int fieldCount = data!.length;
+          notificationsCountController.add(fieldCount);
+        }
+      });
+    } catch (e) {
+      print("Hata: $e");
+    }
+
+    return notificationsCountController.stream;
   }
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:src/models/messagemodel.dart';
+import 'package:src/models/notificationmodel.dart';
 import 'package:src/models/searchmodel.dart';
 import 'package:src/models/usermodel.dart';
 import 'package:src/services/apis/chathistory.dart';
@@ -113,6 +114,29 @@ class APIs {
 
     final ref =
         fstore.collection('chats/${getConversationID(otherUser.id)}/messages');
+    await ref.doc(time).set(newMessage.toJson());
+  }
+
+  static Future<void> sendOtherUserMessage(
+      String otherUser, String msg, Type type, List replyState) async {
+    final time = DateTime.now().millisecondsSinceEpoch.toString();
+
+    final Message newMessage = Message(
+      msg: msg,
+      read: '',
+      told: AuthService.user.uid,
+      type: type,
+      fromId: otherUser,
+      sent: time,
+      edited: "",
+      reply: replyState,
+    );
+
+    chatHistoryDb.addChatUser(AuthService.user.uid, otherUser);
+    chatHistoryDb.addChatUser(otherUser, AuthService.user.uid);
+
+    final ref =
+        fstore.collection('chats/${getConversationID(otherUser)}/messages');
     await ref.doc(time).set(newMessage.toJson());
   }
 
@@ -245,7 +269,7 @@ class APIs {
   }
 
   static Future<List<searchUserDatas>> getFriendDetails(
-      String docId, List<String> friendList) async {
+      List<String> friendList) async {
     if (friendList.isEmpty) return [];
     QuerySnapshot<Map<String, dynamic>> querySnapshot =
         await fstore.collection('Users').where('id', whereIn: friendList).get();
@@ -253,5 +277,23 @@ class APIs {
     return querySnapshot.docs
         .map((doc) => searchUserDatas.fromMap(doc.data()))
         .toList();
+  }
+
+  static Future<List<notificationModel>> getNotifications(String docId) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await fstore
+          .collection('Users')
+          .doc(docId)
+          .collection("notifications")
+          .orderBy("time", descending: true)
+          .limit(30)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => notificationModel.fromMap(doc.data()))
+          .toList();
+    } catch (e) {
+      return [];
+    }
   }
 }

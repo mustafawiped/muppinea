@@ -9,6 +9,7 @@ import 'package:src/models/usermodel.dart';
 import 'package:src/pages/chat/chatpage.dart';
 import 'package:src/pages/others/friendspage.dart';
 import 'package:src/pages/profile/profileedit.dart';
+import 'package:src/services/apis/chathistory.dart';
 import 'package:src/services/apis/friendrequests.dart';
 import 'package:src/services/apis/friends.dart';
 import 'package:src/services/apis/notifications.dart';
@@ -263,23 +264,34 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         isMsgButtonLoading = true;
       });
-      bool state = await NotificationsDb.containsField(
-          widget.user.id, AuthService.me.id);
-      setState(() {
-        isMsgButtonLoading = false;
-      });
+      bool state = await chatHistoryDb.isChatExists(widget.user.id);
       if (state) {
-        awesomeDialog().show(
+        setState(() {
+          isMsgButtonLoading = false;
+        });
+        Navigator.push(
             context,
-            "İstek Gönderemezsiniz.",
-            "Zaten bu kullanıcıya daha önceden mesaj isteği göndermişsiniz. Kullanıcı isteğinize yanıt verene kadar yeni bir istek gönderemezsiniz.",
-            "Tamam",
-            "",
-            DialogType.error,
-            () {},
-            null);
+            MaterialPageRoute(
+                builder: (_) => ChatPage(otherUser: widget.user)));
       } else {
-        messageRequest().messageReq(context, widget.user.id);
+        bool state = await NotificationsDb.containsField(
+            widget.user.id, AuthService.me.id);
+        setState(() {
+          isMsgButtonLoading = false;
+        });
+        if (state) {
+          awesomeDialog().show(
+              context,
+              "İstek Gönderemezsiniz.",
+              "Zaten bu kullanıcıya daha önceden mesaj isteği göndermişsiniz. Kullanıcı isteğinize yanıt verene kadar yeni bir istek gönderemezsiniz.",
+              "Tamam",
+              "",
+              DialogType.error,
+              () {},
+              null);
+        } else {
+          messageRequest().messageReq(context, widget.user.id);
+        }
       }
     }
   }

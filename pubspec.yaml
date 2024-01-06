@@ -52,6 +52,7 @@ flutter:
     - assets/images/gallery.png
     - assets/images/msgempty.png
     - assets/images/building.png
+    - assets/images/notificationempty.png
 
     - assets/badges/bughunter.png
     - assets/badges/erkendonemdestekcisi.png
